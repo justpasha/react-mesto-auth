@@ -1,0 +1,23 @@
+.popup__input {
+  display: block;
+  width: 100%;
+  border: none;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.2);
+  font-family: inherit;
+  font-style: normal;
+  font-weight: normal;
+  font-size: 14px;
+  line-height: 17px;
+  color: black;
+  margin-top: 30px;
+}
+
+.popup__input:first-of-type {
+  margin-top: 54px;
+}
+
+@media screen and (max-width: 720px) {
+  .popup__input:first-of-type {
+    margin-top: 75px;
+  }
+}
