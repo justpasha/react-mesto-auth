@@ -1,0 +1,12 @@
+.popup__container_type_notice {
+  padding: 60px 36px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+@media screen and (max-width: 720px) {
+  .popup__container_type_notice {
+    padding: 50px 18px;
+  }
+}

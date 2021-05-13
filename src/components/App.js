@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Route, Switch } from 'react-router-dom';
+import { Route, Switch, useHistory } from 'react-router-dom';
 import { CurrenUserContext } from '../contexts/CurrentUserContext';
 import ProtectedRoute from './ProtectedRoute';
 import Login from './Login';
@@ -11,7 +11,9 @@ import EditProfilePopup from './EditProfilePopup';
 import EditAvatarPopup from './EditAvatarPopup';
 import AddPlacePopup from './AddPlacePopup';
 import ImagePopup from './ImagePopup';
+import NoticePopup from './NoticePopup';
 import api from '../utils/api';
+import * as apiAuth from '../utils/apiAuth';
 
 function App() {
   const [isEditAvatarPopupOpen, setIsEditAvatarPopupOpen] = useState(false);
@@ -19,11 +21,19 @@ function App() {
   const [isAddPlacePopupOpen, setIsAddPlacePopupOpen] = useState(false);
   const [selectedCard, setSelectedCard] = useState({});
   const [isCardPopupOpen, setIsCardPopupOpen] = useState(false);
+  const [isNoticePopupOpen, setIsNoticePopupOpen] = useState(false);
 
   const [currentUser, setCurrentUser] = useState({});
   const [cards, setCards] = useState([]);
+  const [email, setEmail] = useState('');
+  const [noticePopupData, setNoticePopupData] = useState({
+    type: '',
+    text: '',
+  });
 
   const [loggedIn, setLoggedIn] = useState(false);
+
+  const history = useHistory();
 
   //загрузка данных
   useEffect(() => {
@@ -92,6 +102,7 @@ function App() {
     setIsAddPlacePopupOpen(false);
     setSelectedCard({});
     setIsCardPopupOpen(false);
+    setIsNoticePopupOpen(false);
   }
 
   //обновление данных
@@ -125,22 +136,83 @@ function App() {
       .catch((err) => console.log(err));
   }
 
+  //аутентификацию
+  function handleRegister(data) {
+    return apiAuth
+      .register(data)
+      .then(() => {
+        history.push('/singin');
+        setIsNoticePopupOpen(true);
+        setNoticePopupData({
+          type: 'success',
+          text: 'Вы успешно зарегистрировались!',
+        });
+      })
+      .catch((err) => {
+        console.log(err);
+        setIsNoticePopupOpen(true);
+        setNoticePopupData({
+          type: 'error',
+          text: 'Что-то пошло не так! Попробуйте ещё раз.',
+        });
+      });
+  }
+
+  function handleLogin(data) {
+    return apiAuth
+      .authorize(data)
+      .then(({ token }) => {
+        localStorage.setItem('jwt', token);
+        tokenCheck();
+        setLoggedIn(true);
+      })
+      .catch((err) => console.log(err));
+  }
+
+  function tokenCheck() {
+    if (!localStorage.getItem('jwt')) {
+      return;
+    }
+
+    const jwt = localStorage.getItem('jwt');
+    apiAuth
+      .getContent(jwt)
+      .then((res) => {
+        setEmail(res.data.email);
+        setLoggedIn(true);
+      })
+      .catch((err) => console.log(err));
+  }
+
+  function handleLogout() {
+    localStorage.removeItem('jwt');
+    setLoggedIn(false);
+    history.push('/signin');
+  }
+
+  useEffect(() => {
+    tokenCheck();
+  }, []);
+
+  useEffect(() => {
+    if (loggedIn) {
+      history.push('/');
+    }
+  }, [loggedIn]);
+
   return (
     <div className="page">
       <CurrenUserContext.Provider value={currentUser}>
-        <Header />
-        {/* <Main
-          onEditProfile={handleEditProfileClick}
-          onAddPlace={handleAddPlaceClick}
-          onEditAvatar={handleEditAvatarClick}
-          card={selectedCard}
-          onCardClick={handleCardClick}
-          cards={cards}
-          onCardLike={handleCardLike}
-          onCardDelete={handleCardDelete}
-        /> */}
+        <Header onLogout={handleLogout} email={email} />
         <Switch>
-          {/* <ProtectedRoute path="/">
+          <Route path="/signin">
+            <Login onLogin={handleLogin} />
+          </Route>
+          <Route path="/signup">
+            <Register onRegister={handleRegister} />
+          </Route>
+          <ProtectedRoute
+            path="/"
             component={Main}
             loggedIn={loggedIn}
             onEditProfile={handleEditProfileClick}
@@ -151,13 +223,7 @@ function App() {
             cards={cards}
             onCardLike={handleCardLike}
             onCardDelete={handleCardDelete}
-          </ProtectedRoute> */}
-          <Route path="/signin">
-            <Login />
-          </Route>
-          <Route path="/signup">
-            <Register />
-          </Route>
+          />
         </Switch>
         <Footer />
 
@@ -183,6 +249,12 @@ function App() {
           isOpen={isAddPlacePopupOpen}
           onClose={closeAllPopups}
           onAddPlace={handleAddPlaceSubmit}
+        />
+
+        <NoticePopup
+          isOpen={isNoticePopupOpen}
+          onClose={closeAllPopups}
+          data={noticePopupData}
         />
       </CurrenUserContext.Provider>
     </div>
