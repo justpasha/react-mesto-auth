@@ -8,7 +8,9 @@
 
 **Использованные технологии**
 
-- grid
-- flex
+- react
 - javascript
 - webpack
+- grid и flex верстка
+
+Посмотреть проект: https://justpasha.github.io/react-mesto-auth/
