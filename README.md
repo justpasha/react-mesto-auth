@@ -13,4 +13,4 @@
 - webpack
 - grid и flex верстка
 
-Посмотреть проект: https://justpasha.github.io/react-mesto-auth/
+
